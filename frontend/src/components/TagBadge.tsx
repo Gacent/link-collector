@@ -1,3 +1,5 @@
-export default function TagBadge() {
-  return <div>TagBadge</div>;
+interface TagBadgeProps { name: string }
+
+export default function TagBadge({ name }: TagBadgeProps) {
+  return <span>{name}</span>;
 }
