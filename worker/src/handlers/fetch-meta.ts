@@ -10,14 +10,72 @@ const BOT_UAs = [
   "Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)",
 ];
 
-// POST /api/fetch-meta - Fetch link preview info
+/** SSRF protection: validate URL scheme + block private IPs */
+function validateUrl(urlStr: string): { ok: boolean; error?: string } {
+  let url: URL;
+  try {
+    url = new URL(urlStr);
+  } catch {
+    return { ok: false, error: "Invalid URL" };
+  }
+
+  // Only allow http/https
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    return { ok: false, error: "Only http/https URLs are allowed" };
+  }
+
+  const hostname = url.hostname.toLowerCase();
+
+  // Block private/internal IPs
+  const privatePatterns = [
+    /^127\./,                    // 127.x.x.x
+    /^10\./,                     // 10.x.x.x
+    /^172\.(1[6-9]|2\d|3[01])\./, // 172.16-31.x.x
+    /^192\.168\./,              // 192.168.x.x
+    /^0\./,                      // 0.x.x.x
+    /^169\.254\./,              // link-local
+    /^::1$/,                     // IPv6 loopback
+    /^fc00:/,                    // IPv6 ULA
+    /^fe80:/,                    // IPv6 link-local
+  ];
+
+  for (const pattern of privatePatterns) {
+    if (pattern.test(hostname)) {
+      return { ok: false, error: "Private/internal URLs are not allowed" };
+    }
+  }
+
+  // Block localhost
+  if (hostname === "localhost" || hostname.endsWith(".localhost")) {
+    return { ok: false, error: "localhost is not allowed" };
+  }
+
+  return { ok: true };
+}
+
+/** POST /api/fetch-meta - Fetch link preview info */
 fetchMetaRouter.post("/", async (c) => {
   const { url: rawUrl } = await c.req.json<{ url: string }>();
   if (!rawUrl) return c.json({ error: "url is required" }, 400);
 
+  // SSRF protection
+  const validation = validateUrl(rawUrl);
+  if (!validation.ok) {
+    return c.json({ error: validation.error }, 400);
+  }
+
   try {
     const url = cleanUrl(rawUrl);
     const hostname = new URL(url).hostname;
+
+    // Special handling for GitHub repo URLs — use GitHub API since direct fetch fails from CF Workers
+    const githubResult = await tryGithubApi(url, hostname);
+    if (githubResult) return c.json(githubResult);
+
+    // Special handling for Bilibili — use Bilibili API since all bot UAs are blocked
+    const bilibiliResult = await tryBilibiliApi(url, hostname);
+    if (bilibiliResult) return c.json(bilibiliResult);
+
     const html = await tryFetch(url);
 
     if (!html) {
@@ -43,6 +101,100 @@ fetchMetaRouter.post("/", async (c) => {
     }
   }
 });
+
+/** Try GitHub API for github.com/owner/repo URLs */
+async function tryGithubApi(url: string, hostname: string): Promise<ReturnType<typeof fallback> | null> {
+  if (!hostname.includes("github.com")) return null;
+  try {
+    const u = new URL(url);
+    const parts = u.pathname.split("/").filter(Boolean);
+    if (parts.length < 2) return null;
+    const [owner, repo] = parts;
+
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
+      headers: { "Accept": "application/vnd.github.v3+json", "User-Agent": "BookmarkApp/1.0" },
+    });
+    if (!res.ok) return null;
+    const data = await res.json() as any;
+
+    const description = data.description ? decode(data.description) : "";
+    const stars = data.stargazers_count > 0 ? `⭐ ${data.stargazers_count}` : "";
+    const lang = data.language || "";
+    const summary = [description, stars, lang].filter(Boolean).join(" · ");
+
+    return {
+      title: `${owner}/${repo}`,
+      description: summary || `${owner}/${repo} on GitHub`,
+      cover_image: "",
+      source: "github.com",
+      content: description,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** Try Bilibili API for bilibili.com/video/BVxxx URLs */
+async function tryBilibiliApi(url: string, hostname: string): Promise<ReturnType<typeof fallback> | null> {
+  if (!hostname.includes("bilibili.com") && !hostname.includes("b23.tv")) return null;
+
+  // Extract BV id from URL
+  const bvidMatch = url.match(/(BV[\w]{10})/i);
+  if (!bvidMatch) return null;
+  const bvid = bvidMatch[1];
+
+  try {
+    const res = await fetch(`https://api.bilibili.com/x/web-interface/view?bvid=${bvid}`, {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; BookmarkApp/1.0)" },
+    });
+    if (!res.ok) return null;
+    const json = await res.json() as any;
+    if (json.code !== 0 || !json.data) return null;
+
+    const d = json.data;
+    const title = decode(d.title || "");
+    const desc = decode(d.desc || "");
+    const owner = d.owner?.name || "";
+    const pic = d.pic || "";
+    const duration = d.duration ? `${Math.floor(d.duration / 60)}:${String(d.duration % 60).padStart(2, "0")}` : "";
+    const view = d.stat?.view ?? 0;
+    const like = d.stat?.like ?? 0;
+    const favorite = d.stat?.favorite ?? 0;
+
+    // Build summary: UP主 + 播放量 + 时长 + 描述
+    const stats = [
+      owner && `UP: ${owner}`,
+      view > 0 && `${view} 播放`,
+      duration && `时长 ${duration}`,
+      like > 0 && `${like} 点赞`,
+      favorite > 0 && `${favorite} 收藏`,
+    ].filter(Boolean).join(" · ");
+
+    const summary = [stats, desc].filter(Boolean).join("\n\n");
+
+    return {
+      title: `【B站】${title}`,
+      description: summary || `${title} - Bilibili`,
+      cover_image: pic,
+      source: "bilibili.com",
+      content: desc,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/*
+ * NOTE: Zhihu, Juejin, Douyin, Xiaohongshu adapters removed.
+ * These platforms require authentication/anti-bot signatures that cannot
+ * be obtained in a CF Workers environment:
+ * - Zhihu: 403 without login cookies
+ * - Juejin: requires msToken + a_bogus browser-computed signatures
+ * - Douyin: iteminfo API returns status 11110 (closed/changed)
+ * - Xiaohongshu: no public API, requires paid third-party service
+ *
+ * These sites fall through to the OG tag extraction + fallback title.
+ */
 
 /** Strip tracking params and keep only meaningful ones */
 function cleanUrl(url: string): string {
@@ -82,16 +234,20 @@ async function tryFetch(url: string): Promise<string | null> {
 }
 
 async function fetchWithUA(url: string, userAgent: string): Promise<string | null> {
-  const res = await fetch(url, {
-    headers: {
-      "User-Agent": userAgent,
-      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-      "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
-    },
-    redirect: "follow",
-  });
-  if (!res.ok) return null;
-  const html = await res.text();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000); // 8s timeout
+  try {
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent": userAgent,
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+      },
+      redirect: "follow",
+      signal: controller.signal,
+    });
+    if (!res.ok) return null;
+    const html = await res.text();
 
   // Reject known anti-bot / challenge pages
   const signals = [
@@ -103,6 +259,11 @@ async function fetchWithUA(url: string, userAgent: string): Promise<string | nul
   if (html.includes("<body></body>") || html.includes("<head></head>")) return null;
 
   return html;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function fallback(url: string, hostname: string) {
