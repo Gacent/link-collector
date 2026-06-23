@@ -36,54 +36,58 @@ export default function BookmarkForm({ onSaved }: { onSaved: () => void }) {
     if (!text) return;
     setLoading(true);
 
-    if (isUrl(text)) {
-      const meta = await api.fetchMeta(text);
-      let tags: string[] = [];
-      let summary = "";
-      let title = meta.title || text;
+    try {
+      if (isUrl(text)) {
+        const meta = await api.fetchMeta(text);
+        let tags: string[] = [];
+        let summary = "";
+        let title = meta.title || text;
 
-      if (meta.content) {
-        try {
-          const ai = await api.aiExtract({ type: "link", content: meta.content, title: meta.title });
-          if (ai.title) title = ai.title;
-          tags = ai.tags || [];
-          summary = ai.summary || "";
-        } catch {}
+        if (meta.description || meta.content) {
+          try {
+            const ai = await api.aiExtract({ type: "link", content: [meta.description, meta.content].filter(Boolean).join("\n\n"), title: meta.title });
+            if (ai.title) title = ai.title;
+            tags = ai.tags || [];
+            summary = ai.summary || "";
+          } catch {}
+        }
+
+        setPreview({
+          type: "link", url: text, title,
+          original_title: meta.title !== title ? meta.title : undefined,
+          cover_image: meta.cover_image, source: meta.source,
+          tags, summary,
+        });
+        setSelectedTags(tags);
+      } else {
+        // Notes: skip AI, let user fill title directly
+        setPreview({ type: "note", title: "", source: "", content: text, tags: [], summary: "" });
+        setSelectedTags([]);
       }
-
-      setPreview({
-        type: "link", url: text, title,
-        original_title: meta.title !== title ? meta.title : undefined,
-        cover_image: meta.cover_image, source: meta.source,
-        tags, summary,
-      });
-      setSelectedTags(tags);
-    } else {
-      let title = text.slice(0, 30);
-      let tags: string[] = [];
-
-      try {
-        const ai = await api.aiExtract({ type: "note", content: text });
-        if (ai.title) title = ai.title;
-        tags = ai.tags || [];
-      } catch {}
-
-      setPreview({ type: "note", title, source: "", content: text, tags, summary: "" });
-      setSelectedTags(tags);
+    } catch (err) {
+      console.error("fetchMeta error:", err);
+      // Show a basic preview so user can still save manually
+      if (isUrl(text)) {
+        setPreview({ type: "link", url: text, title: text, source: "", tags: [], summary: "" });
+        setSelectedTags([]);
+      } else {
+        setPreview({ type: "note", title: "", source: "", content: text, tags: [], summary: "" });
+        setSelectedTags([]);
+      }
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   }
 
   async function handleSave() {
     if (!preview) return;
     setSaving(true);
     try {
-      await api.createBookmark({
+      const created = await api.createBookmark({
         url: preview.url,
         title: preview.title,
         original_title: preview.original_title || "",
-        summary: preview.summary,
+        summary: preview.summary || preview.content || "",
         tags: selectedTags,
         source: preview.source,
       });
@@ -182,8 +186,20 @@ export default function BookmarkForm({ onSaved }: { onSaved: () => void }) {
             />
           )}
           <div className="space-y-1.5">
-            <h3 className="font-display font-semibold text-[var(--color-ink)] dark:text-[var(--color-on-dark)] 
-              text-[18px] leading-tight">{preview.title}</h3>
+            {preview.type === "note" ? (
+              <input 
+                value={preview.title}
+                onChange={(e) => setPreview({ ...preview, title: e.target.value })}
+                placeholder="输入标题..."
+                className="w-full font-display font-semibold text-[var(--color-ink)] dark:text-[var(--color-on-dark)] 
+                  text-[18px] leading-tight bg-transparent border-b border-[var(--color-hairline)] 
+                  dark:border-[var(--color-surface-dark-elevated)] focus:outline-none focus:border-[var(--color-primary)] 
+                  pb-1 transition-colors"
+              />
+            ) : (
+              <h3 className="font-display font-semibold text-[var(--color-ink)] dark:text-[var(--color-on-dark)] 
+                text-[18px] leading-tight">{preview.title}</h3>
+            )}
             {preview.original_title && preview.original_title !== preview.title && (
               <p className="text-[12px] text-[var(--color-muted)] dark:text-[var(--color-on-dark-soft)]">
                 {preview.original_title}
@@ -244,7 +260,7 @@ export default function BookmarkForm({ onSaved }: { onSaved: () => void }) {
           <div className="flex gap-2 pt-2 border-t border-[var(--color-hairline)] dark:border-[var(--color-surface-dark-elevated)]">
             <button 
               onClick={handleSave} 
-              disabled={saving}
+              disabled={saving || (preview.type === "note" && !preview.title.trim())}
               className="flex-1 py-2 px-4 
                 bg-[var(--color-primary)] text-[var(--color-on-primary)] 
                 rounded-[var(--radius-md)] text-[14px] font-sans font-medium 

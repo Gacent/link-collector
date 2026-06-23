@@ -11,8 +11,8 @@ function getHeaders(): Record<string, string> {
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
-    headers: getHeaders(),
     ...options,
+    headers: { ...getHeaders(), ...(options?.headers as Record<string, string>) },
   });
   if (res.status === 401) {
     localStorage.removeItem("auth_token");

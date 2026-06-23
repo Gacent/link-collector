@@ -32,7 +32,7 @@ export default function Layout({ children }: LayoutProps) {
       flex flex-col transition-colors duration-300">
       
       {/* Top Bar */}
-      <header className="sticky top-0 z-10 
+      <header className="sticky top-0 z-20 
         bg-[var(--color-canvas)]/95 dark:bg-[var(--color-surface-dark)]/95 
         backdrop-blur-sm border-b border-[var(--color-hairline)] 
         dark:border-[var(--color-surface-dark-elevated)]">

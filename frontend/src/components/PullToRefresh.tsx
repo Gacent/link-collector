@@ -12,9 +12,10 @@ export default function PullToRefresh({ onRefresh, children }: PullToRefreshProp
   const [refreshing, setRefreshing] = useState(false);
   const startY = useRef(0);
   const pulling = useRef(false);
+  const pullRef = useRef(0); // ref mirrors pullDistance for closure-safe reads
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (window.scrollY > 0) return; // Only pull-refresh when at top
+    if (window.scrollY > 0) return;
     startY.current = e.touches[0].clientY;
     pulling.current = true;
   }, []);
@@ -22,28 +23,30 @@ export default function PullToRefresh({ onRefresh, children }: PullToRefreshProp
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!pulling.current || refreshing) return;
     const delta = e.touches[0].clientY - startY.current;
-    if (delta <= 0) { setPullDistance(0); return; }
-    // Add resistance: sqrt scaling makes it feel natural
+    if (delta <= 0) { pullRef.current = 0; setPullDistance(0); return; }
     const distance = Math.min(Math.sqrt(delta * 10), 120);
+    pullRef.current = distance;
     setPullDistance(distance);
   }, [refreshing]);
 
   const handleTouchEnd = useCallback(async () => {
     if (!pulling.current || refreshing) return;
     pulling.current = false;
-    if (pullDistance >= THRESHOLD) {
+    if (pullRef.current >= THRESHOLD) {
       setRefreshing(true);
       setPullDistance(THRESHOLD);
       try {
         await onRefresh();
       } finally {
         setRefreshing(false);
+        pullRef.current = 0;
         setPullDistance(0);
       }
     } else {
+      pullRef.current = 0;
       setPullDistance(0);
     }
-  }, [pullDistance, refreshing, onRefresh]);
+  }, [refreshing, onRefresh]);
 
   return (
     <div
