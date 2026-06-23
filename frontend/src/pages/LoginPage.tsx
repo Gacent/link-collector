@@ -27,12 +27,19 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
-      <form onSubmit={handleLogin} className="w-full max-w-sm bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 space-y-6">
-        <div className="text-center space-y-2">
+    <div className="flex items-center justify-center min-h-screen bg-[var(--color-canvas)] dark:bg-[var(--color-surface-dark)] px-4">
+      <form
+        onSubmit={handleLogin}
+        className="w-full max-w-sm bg-[var(--color-surface-card)] dark:bg-[var(--color-surface-dark-elevated)] rounded-[var(--radius-xl)] p-8"
+      >
+        <div className="text-center space-y-2 mb-6">
           <div className="text-4xl">🔖</div>
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">收藏夹</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">请输入访问密码</p>
+          <h1 className="font-[var(--font-display)] text-2xl text-[var(--color-ink)] dark:text-[var(--color-on-dark)]">
+            收藏夹
+          </h1>
+          <p className="text-sm text-[var(--color-muted)] dark:text-[var(--color-on-dark-soft)]">
+            请输入访问密码
+          </p>
         </div>
 
         <input
@@ -41,15 +48,19 @@ export default function LoginPage() {
           type="password"
           placeholder="密码"
           autoFocus
-          className="w-full p-3 border border-gray-200 dark:border-gray-600 rounded-xl text-sm bg-gray-50 dark:bg-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 text-center"
+          className="w-full bg-[var(--color-canvas)] dark:bg-[var(--color-surface-dark-soft)] border border-[var(--color-hairline)] dark:border-[var(--color-surface-dark-elevated)] rounded-[var(--radius-md)] px-4 py-2.5 text-sm text-[var(--color-ink)] dark:text-[var(--color-on-dark)] focus-ring mb-4"
         />
 
-        {error && <p className="text-sm text-red-500 text-center">{error}</p>}
+        {error && (
+          <p className="text-[var(--color-error)] text-sm text-center mb-4">
+            {error}
+          </p>
+        )}
 
         <button
           type="submit"
           disabled={loading || !password.trim()}
-          className="w-full py-2.5 bg-blue-500 text-white rounded-xl text-sm font-medium disabled:opacity-50 hover:bg-blue-600 transition-colors"
+          className="w-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-active)] text-[var(--color-on-primary)] rounded-[var(--radius-md)] py-2.5 text-sm font-medium btn-press transition-colors disabled:opacity-50"
         >
           {loading ? "验证中..." : "进入"}
         </button>

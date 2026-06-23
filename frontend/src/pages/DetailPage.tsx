@@ -13,8 +13,8 @@ export default function DetailPage() {
   if (!bookmark) {
     return (
       <div className="py-4">
-        <button onClick={() => navigate(-1)} className="text-sm text-blue-500 hover:text-blue-600">← 返回</button>
-        <div className="text-center text-gray-400 py-8">未找到</div>
+      <button onClick={() => navigate(-1)} className="text-[var(--color-primary)] font-medium text-sm hover:text-[var(--color-primary-active)] transition-colors">← 返回</button>
+      <div className="text-center text-[var(--color-muted)] dark:text-[var(--color-on-dark-soft)] py-8">未找到</div>
       </div>
     );
   }
@@ -27,35 +27,49 @@ export default function DetailPage() {
 
   return (
     <div className="py-4 space-y-4">
-      <button onClick={() => navigate(-1)} className="text-sm text-blue-500 hover:text-blue-600">← 返回</button>
+      <button onClick={() => navigate(-1)} className="text-[var(--color-primary)] font-medium text-sm hover:text-[var(--color-primary-active)] transition-colors">← 返回</button>
 
-      <h1 className="text-xl font-bold text-gray-900 dark:text-white">{cleanText(bookmark.title)}</h1>
+      <h1 className="font-[var(--font-display)] text-xl leading-snug text-[var(--color-ink)] dark:text-[var(--color-on-dark)] mt-2">
+  {cleanText(bookmark.title)}
+</h1>
 
       {bookmark.original_title && bookmark.original_title !== bookmark.title && (
-        <p className="text-sm text-gray-400">原文标题：{bookmark.original_title}</p>
+        <p className="text-sm text-[var(--color-muted)] dark:text-[var(--color-on-dark-soft)] mt-1 italic">
+          {cleanText(bookmark.original_title)}
+        </p>
       )}
 
-      <div className="flex items-center gap-2 text-sm text-gray-500">
+      <div className="flex items-center gap-2 text-xs text-[var(--color-muted-soft)] dark:text-[var(--color-on-dark-soft)] mt-3">
         {bookmark.source && <span>{bookmark.source}</span>}
-        <span>{new Date(bookmark.created_at).toLocaleString("zh-CN")}</span>
+        {bookmark.created_at && <span>{new Date(bookmark.created_at).toLocaleString("zh-CN")}</span>}
       </div>
 
       {bookmark.summary && (
-        <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg text-sm text-gray-700 dark:text-gray-300">
-          <strong>AI 摘要：</strong>{cleanText(bookmark.summary)}
+        <div className="bg-[var(--color-surface-soft)] dark:bg-[var(--color-surface-dark-soft)] p-4 rounded-[var(--radius-lg)] mt-4">
+          <p className="text-sm text-[var(--color-body)] dark:text-[var(--color-on-dark)] leading-relaxed">
+            {cleanText(bookmark.summary)}
+          </p>
         </div>
       )}
 
       {bookmark.tags.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">{bookmark.tags.map((tag) => (<TagBadge key={tag} name={tag} />))}</div>
+        <div className="flex flex-wrap gap-1.5 mt-4">
+          {bookmark.tags.map((tag) => (
+            <TagBadge key={tag} name={tag} />
+          ))}
+        </div>
       )}
 
-      <div className="flex gap-2 pt-2">
+      <div className="flex gap-3 mt-6 pt-4 border-t border-[var(--color-hairline)] dark:border-[var(--color-surface-dark-elevated)]">
         {bookmark.url && (
           <a href={bookmark.url} target="_blank" rel="noopener noreferrer"
-            className="flex-1 py-2 bg-blue-500 text-white rounded-lg text-sm text-center font-medium">阅读原文</a>
+            className="flex-1 py-2.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-active)] text-[var(--color-on-primary)] rounded-[var(--radius-md)] text-sm text-center font-medium btn-press transition-colors">
+            阅读原文
+          </a>
         )}
-        <button onClick={handleDelete} className="py-2 px-4 text-red-500 text-sm">删除</button>
+        <button onClick={handleDelete} className="py-2.5 px-5 text-sm text-[var(--color-error)] hover:opacity-80 transition-opacity">
+          删除
+        </button>
       </div>
     </div>
   );

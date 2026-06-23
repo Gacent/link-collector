@@ -4,6 +4,7 @@ import { Bookmark } from "../types";
 import BookmarkCard from "../components/BookmarkCard";
 import BookmarkForm from "../components/BookmarkForm";
 import SearchBar from "../components/SearchBar";
+import { cleanText } from "../clean";
 
 const today = new Date();
 today.setHours(0, 0, 0, 0);
@@ -70,28 +71,28 @@ export default function HomePage() {
       <BookmarkForm onSaved={handleSaved} />
 
       {loading ? (
-        <div className="text-center text-gray-400 py-8">加载中...</div>
+        <div className="text-center text-[var(--color-muted)] dark:text-[var(--color-on-dark-soft)] py-8 loading-pulse">加载中...</div>
       ) : bookmarks.length === 0 ? (
-        <div className="text-center text-gray-400 py-8">
-          <p className="text-4xl mb-2">📭</p>
-          <p className="text-sm">还没有收藏，粘贴一个链接开始吧</p>
+        <div className="text-center py-12">
+          <p className="text-5xl mb-4">📭</p>
+          <p className="text-[var(--color-muted)] dark:text-[var(--color-on-dark-soft)] text-sm">还没有收藏，粘贴一个链接开始吧</p>
         </div>
       ) : (
         <div className="space-y-6">
           {groups.map((group) => (
             <div key={group.label}>
-              <h3 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3 px-1">
+              <h3 className="font-sans text-[11px] font-semibold uppercase tracking-[1.5px] text-[var(--color-muted-soft)] dark:text-[var(--color-on-dark-soft)] mb-3 px-1">
                 {group.label}
               </h3>
               <div className="space-y-3">
-                {group.items.map((bookmark) => (
-                  <BookmarkCard key={bookmark.id} bookmark={bookmark} />
+                {group.items.map((bookmark, idx) => (
+                  <BookmarkCard key={bookmark.id} bookmark={bookmark} index={idx} />
                 ))}
               </div>
             </div>
           ))}
           {cursor && (
-            <button onClick={loadMore} className="w-full py-3 text-sm text-blue-500 hover:text-blue-600">
+            <button onClick={loadMore} className="w-full py-3 text-sm text-[var(--color-primary)] hover:opacity-80 transition-opacity font-medium">
               加载更多
             </button>
           )}

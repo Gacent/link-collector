@@ -5,35 +5,64 @@ import { cleanText } from "../clean";
 
 interface BookmarkCardProps {
   bookmark: Bookmark;
+  index?: number;
 }
 
-export default function BookmarkCard({ bookmark }: BookmarkCardProps) {
+export default function BookmarkCard({ bookmark, index = 0 }: BookmarkCardProps) {
+  const staggerClass = index > 0 ? `stagger-${Math.min(index, 5)}` : 'fade-in-up';
+
   return (
     <Link
       to={`/bookmark/${bookmark.id}`}
       state={{ bookmark }}
-      className="block bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow"
+      className={`block bg-[var(--color-surface-card)] dark:bg-[var(--color-surface-dark-elevated)] 
+        rounded-[var(--radius-lg)] overflow-hidden card-hover border border-[var(--color-hairline)] 
+        dark:border-[var(--color-surface-dark-elevated)] fade-in-up ${staggerClass}`}
+      style={{ animationDelay: `${Math.min(index * 0.05, 0.25)}s` }}
     >
-      <div className="p-3 space-y-2">
+      <div className="p-4 space-y-2">
         <div className="flex items-start gap-2">
-          <span className="text-xs mt-0.5">🔗</span>
-          <h3 className="font-semibold text-sm text-gray-900 dark:text-white line-clamp-2 flex-1">{cleanText(bookmark.title)}</h3>
+          <div className="w-6 h-6 rounded-[var(--radius-sm)] bg-[var(--color-primary)]/10 
+            dark:bg-[var(--color-primary)]/20
+            flex items-center justify-center text-[var(--color-primary)] 
+            dark:text-[var(--color-on-dark)] text-xs flex-shrink-0">
+            🔗
+          </div>
+          <h3 className="font-sans font-medium text-[var(--color-ink)] 
+            dark:text-[var(--color-on-dark)] text-[15px] 
+            line-clamp-2 flex-1 leading-tight">{cleanText(bookmark.title)}</h3>
         </div>
 
         {bookmark.summary && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">{cleanText(bookmark.summary)}</p>
+          <p className="text-[var(--color-muted)] dark:text-[var(--color-on-dark-soft)] 
+            text-[13px] line-clamp-2 leading-relaxed">
+            {cleanText(bookmark.summary)}
+          </p>
         )}
 
-        <div className="flex items-center gap-2 text-xs text-gray-400">
+        <div className="flex items-center gap-2 text-[11px] 
+          text-[var(--color-muted-soft)] dark:text-[var(--color-on-dark-soft)]">
           {bookmark.source && <span>{bookmark.source}</span>}
+          <span>•</span>
           <span>{new Date(bookmark.created_at).toLocaleDateString("zh-CN")}</span>
         </div>
 
         {bookmark.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {bookmark.tags.map((tag) => (<TagBadge key={tag} name={tag} />))}
+          <div className="flex flex-wrap gap-1 pt-1">
+            {bookmark.tags.map((tag) => (
+              <TagBadge key={tag} name={tag} />
+            ))}
           </div>
         )}
+
+        <div className="pt-1">
+          <Link 
+            to={`/bookmark/${bookmark.id}`}
+            className="text-[var(--color-primary)] dark:text-[var(--color-on-dark)] 
+              text-[12px] font-sans hover:underline transition-colors">
+            阅读原文
+          </Link>
+        </div>
       </div>
     </Link>
   );

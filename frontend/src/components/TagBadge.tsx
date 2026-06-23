@@ -2,31 +2,53 @@ interface TagBadgeProps {
   name: string;
   onClick?: () => void;
   active?: boolean;
+  variant?: 'default' | 'coral' | 'teal' | 'amber';
 }
 
-export default function TagBadge({ name, onClick, active }: TagBadgeProps) {
-  const colors: Record<string, string> = {
-    "技术": "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
-    "AI": "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300",
-    "商业": "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
-    "产品": "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300",
-    "设计": "bg-pink-100 text-pink-700 dark:bg-pink-900 dark:text-pink-300",
-    "生活": "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
-    "开源": "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300",
-    "教程": "bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-300",
-    "新闻": "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
-    "观点": "bg-cyan-100 text-cyan-700 dark:bg-cyan-900 dark:text-cyan-300",
-    "工具": "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300",
-    "资源": "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300",
-    "阅读": "bg-rose-100 text-rose-700 dark:bg-rose-900 dark:text-rose-300",
+export default function TagBadge({ 
+  name, 
+  onClick, 
+  active = false, 
+  variant = 'default' 
+}: TagBadgeProps) {
+  // Claude design system badge styles with proper dark mode variants
+  const baseClasses = `
+    inline-block text-[12px] font-sans font-medium
+    px-2.5 py-1 rounded-[var(--radius-pill)] cursor-pointer transition-all duration-200
+    btn-press select-none
+  `;
+
+  const variants = {
+    default: `bg-[var(--color-surface-soft)] dark:bg-[var(--color-surface-dark-soft)]
+      text-[var(--color-muted)] dark:text-[var(--color-on-dark-soft)]
+      border border-[var(--color-hairline)] dark:border-[var(--color-surface-dark-elevated)]
+      hover:border-[var(--color-primary)]/50 hover:text-[var(--color-primary)]`,
+    coral: `bg-[var(--color-primary)]/10 dark:bg-[var(--color-primary)]/20 
+      text-[var(--color-primary)] dark:text-[var(--color-on-dark)] 
+      border border-[var(--color-primary)] dark:border-[var(--color-primary)]`,
+    teal: `bg-[var(--color-accent-teal)]/15 dark:bg-[var(--color-accent-teal)]/20 
+      text-[var(--color-accent-teal)] dark:text-[var(--color-on-dark)] 
+      border border-[var(--color-accent-teal)]/30 dark:border-[var(--color-accent-teal)]/40`,
+    amber: `bg-[var(--color-accent-amber)]/15 dark:bg-[var(--color-accent-amber)]/20 
+      text-[var(--color-accent-amber)] dark:text-[var(--color-on-dark)] 
+      border border-[var(--color-accent-amber)]/30 dark:border-[var(--color-accent-amber)]/40`,
   };
 
-  const colorClass = colors[name] || "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300";
+  const activeRing = active ? 'ring-2 ring-[var(--color-primary)] ring-offset-2 dark:ring-offset-[var(--color-surface-dark)]' : '';
 
   return (
     <span
       onClick={onClick}
-      className={`inline-block text-xs px-2 py-0.5 rounded-full cursor-pointer ${active ? "ring-2 ring-blue-400" : ""} ${colorClass}`}
+      className={`${baseClasses} ${variants[variant]} ${activeRing}`}
+      role="button"
+      aria-pressed={active}
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick?.();
+        }
+      }}
     >
       {name}
     </span>
