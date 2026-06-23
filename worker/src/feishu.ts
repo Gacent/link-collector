@@ -166,7 +166,12 @@ export async function listFeishuRecords(
     );
   }
 
-  return data.data;
+  const resultData = data.data;
+  return {
+    items: resultData?.items ?? [],
+    page_token: resultData?.page_token ?? null,
+    has_more: resultData?.has_more ?? false,
+  };
 }
 
 /* ------------------------------------------------------------------ */

@@ -1,7 +1,8 @@
 interface SenseNovaResponse {
   choices: Array<{
     message: {
-      content: string;
+      content: string | null;
+      reasoning?: string;
     };
   }>;
 }
@@ -24,7 +25,7 @@ export async function callSenseNova(
         { role: "user", content: userContent },
       ],
       temperature: 0.3,
-      max_tokens: 800,
+      max_tokens: 64000,
     }),
   });
 
@@ -34,7 +35,22 @@ export async function callSenseNova(
   }
 
   const data = (await response.json()) as SenseNovaResponse;
-  return data.choices[0].message.content;
+  const msg = data.choices?.[0]?.message;
+  let content = msg?.content;
+
+  // Some models put reasoning in a separate field - try to extract JSON from it
+  if (!content && msg?.reasoning) {
+    const jsonMatch = msg.reasoning.match(/\{[\s\S]*"title"[\s\S]*"tags"[\s\S]*\}/);
+    if (jsonMatch) return jsonMatch[0];
+    // Fallback: return reasoning text and let caller parse
+    return msg.reasoning;
+  }
+
+  if (!content) {
+    console.error("SenseNova empty response:", JSON.stringify(data).slice(0, 500));
+    throw new Error("SenseNova returned empty content");
+  }
+  return content;
 }
 
 export const LINK_EXTRACT_PROMPT = `你是一个专业的信息整理助手。根据提供的网页标题和内容，生成以下四部分：

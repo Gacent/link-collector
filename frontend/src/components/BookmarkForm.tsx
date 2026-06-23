@@ -19,6 +19,7 @@ const tagOptions = ["技术", "AI", "商业", "产品", "设计", "生活", "开
 export default function BookmarkForm({ onSaved }: { onSaved: () => void }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [preview, setPreview] = useState<PreviewData | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -73,18 +74,21 @@ export default function BookmarkForm({ onSaved }: { onSaved: () => void }) {
 
   async function handleSave() {
     if (!preview) return;
-
-    await api.createBookmark({
-      url: preview.url,
-      title: preview.title,
-      original_title: preview.original_title || "",
-      summary: preview.summary,
-      tags: selectedTags,
-      source: preview.source,
-    });
-
-    setInput(""); setPreview(null); setSelectedTags([]); setShowForm(false);
-    onSaved();
+    setSaving(true);
+    try {
+      await api.createBookmark({
+        url: preview.url,
+        title: preview.title,
+        original_title: preview.original_title || "",
+        summary: preview.summary,
+        tags: selectedTags,
+        source: preview.source,
+      });
+      setInput(""); setPreview(null); setSelectedTags([]); setShowForm(false);
+      onSaved();
+    } finally {
+      setSaving(false);
+    }
   }
 
   function toggleTag(tag: string) { setSelectedTags((prev) => prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]); }
@@ -149,7 +153,8 @@ export default function BookmarkForm({ onSaved }: { onSaved: () => void }) {
             </div>
           </div>
           <div className="flex gap-2 pt-2">
-            <button onClick={handleSave} className="flex-1 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium">保存</button>
+            <button onClick={handleSave} disabled={saving}
+              className="flex-1 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium disabled:opacity-50">{saving ? "保存中..." : "保存"}</button>
             <button onClick={() => { setPreview(null); setInput(""); }} className="py-2 px-4 text-gray-500 text-sm">重新输入</button>
           </div>
         </>

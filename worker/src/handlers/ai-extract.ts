@@ -27,7 +27,9 @@ aiExtractRouter.post("/", async (c) => {
     if (body.type === "link") {
       const input = `标题：${body.title || ""}\n内容：${body.content}`;
       const text = await callSenseNova(apiKey, LINK_EXTRACT_PROMPT, input);
-      const parsed = JSON.parse(text);
+      // Strip markdown code fences if present
+      const cleaned = text.replace(/```(?:json)?\s*/gi, "").replace(/```\s*$/g, "").trim();
+      const parsed = JSON.parse(cleaned);
       result = {
         title: parsed.title || "",
         summary: parsed.summary || "",
@@ -41,6 +43,7 @@ aiExtractRouter.post("/", async (c) => {
 
     return c.json(result);
   } catch (e) {
+    console.error("SenseNova AI extract error:", e);
     // Graceful fallback - if AI fails, return basic info
     if (body.type === "link") {
       return c.json({ title: "", summary: "", tags: [], _fallback: true });

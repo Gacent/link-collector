@@ -1,9 +1,33 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { api } from "../api";
 import { Bookmark } from "../types";
 import BookmarkCard from "../components/BookmarkCard";
 import BookmarkForm from "../components/BookmarkForm";
 import SearchBar from "../components/SearchBar";
+
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+
+const yesterday = new Date(today);
+yesterday.setDate(yesterday.getDate() - 1);
+
+const twoDaysAgo = new Date(today);
+twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+
+const threeDaysAgo = new Date(today);
+threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+function getDateLabel(dateStr: string): string {
+  if (!dateStr) return "未知";
+  const d = new Date(dateStr);
+  d.setHours(0, 0, 0, 0);
+  const time = d.getTime();
+
+  if (time === today.getTime()) return "今天";
+  if (time === yesterday.getTime()) return "昨天";
+  if (time >= threeDaysAgo.getTime()) return "前3天";
+  return "更早";
+}
 
 export default function HomePage() {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
@@ -28,6 +52,18 @@ export default function HomePage() {
 
   function handleSaved() { loadBookmarks(); }
 
+  // Group bookmarks by date label
+  const groups = useMemo(() => {
+    const map = new Map<string, Bookmark[]>();
+    for (const b of bookmarks) {
+      const label = getDateLabel(b.created_at);
+      if (!map.has(label)) map.set(label, []);
+      map.get(label)!.push(b);
+    }
+    const order = ["今天", "昨天", "前3天", "更早"];
+    return order.filter((l) => map.has(l)).map((l) => ({ label: l, items: map.get(l)! }));
+  }, [bookmarks]);
+
   return (
     <div className="space-y-4 py-4">
       <SearchBar />
@@ -41,9 +77,24 @@ export default function HomePage() {
           <p className="text-sm">还没有收藏，粘贴一个链接开始吧</p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {bookmarks.map((bookmark) => (<BookmarkCard key={bookmark.id} bookmark={bookmark} />))}
-          {cursor && (<button onClick={loadMore} className="w-full py-3 text-sm text-blue-500 hover:text-blue-600">加载更多</button>)}
+        <div className="space-y-6">
+          {groups.map((group) => (
+            <div key={group.label}>
+              <h3 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3 px-1">
+                {group.label}
+              </h3>
+              <div className="space-y-3">
+                {group.items.map((bookmark) => (
+                  <BookmarkCard key={bookmark.id} bookmark={bookmark} />
+                ))}
+              </div>
+            </div>
+          ))}
+          {cursor && (
+            <button onClick={loadMore} className="w-full py-3 text-sm text-blue-500 hover:text-blue-600">
+              加载更多
+            </button>
+          )}
         </div>
       )}
     </div>

@@ -39,8 +39,11 @@ bookmarksRouter.get("/", async (c) => {
       return { bookmarks: result.items.map(toBookmark), nextCursor: null };
     }
     const result = await listFeishuRecords(token, c.env.FEISHU_BASE_APP_TOKEN, c.env.FEISHU_BASE_TABLE_ID, pageSize, pageToken || undefined);
+    const bookmarks = result.items.map(toBookmark);
+    // Sort by date descending (newest first)
+    bookmarks.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     return {
-      bookmarks: result.items.map(toBookmark),
+      bookmarks,
       nextCursor: result.has_more ? result.page_token : null,
     };
   });
@@ -66,7 +69,7 @@ bookmarksRouter.post("/", async (c) => {
       "URL": body.url ? { text: body.title, link: body.url } : "",
       "标签": body.tags || [],
       "AI摘要": body.summary || "",
-      "保存时间": new Date().toISOString().split("T")[0],
+      "保存时间": Date.now(),
       "来源": body.source || "",
     };
     const record = await createFeishuRecord(token, c.env.FEISHU_BASE_APP_TOKEN, c.env.FEISHU_BASE_TABLE_ID, fields);
@@ -86,8 +89,25 @@ bookmarksRouter.delete("/:id", async (c) => {
 // List all tags (multi-select options from Feishu)
 bookmarksRouter.get("/tags", async (c) => {
   return withFeishu(c, async (token) => {
-    const options = await listFeishuFieldOptions(token, c.env.FEISHU_BASE_APP_TOKEN, c.env.FEISHU_BASE_TABLE_ID, "标签");
-    return options.map((o: any) => ({ name: o.name }));
+    // Collect all unique tag names from actual records
+    const allTags = new Set<string>();
+    let pageToken: string | undefined;
+    let hasMore = true;
+    while (hasMore) {
+      const result = await listFeishuRecords(token, c.env.FEISHU_BASE_APP_TOKEN, c.env.FEISHU_BASE_TABLE_ID, 500, pageToken);
+      for (const item of result.items) {
+        const tagField = item.fields["标签"];
+        if (Array.isArray(tagField)) {
+          for (const t of tagField) {
+            const name = typeof t === "string" ? t : t.name ?? String(t);
+            if (name) allTags.add(name);
+          }
+        }
+      }
+      hasMore = result.has_more;
+      pageToken = result.page_token ?? undefined;
+    }
+    return Array.from(allTags).map((name) => ({ name }));
   });
 });
 
@@ -102,6 +122,15 @@ function toBookmark(record: { record_id: string; fields: Record<string, any> }) 
     tags = f["标签"].map((t: any) => (typeof t === "string" ? t : t.name ?? String(t)));
   }
 
+  // Parse the date: Feishu returns timestamp (ms) or ISO string
+  let createdAt = "";
+  const rawDate = f["保存时间"];
+  if (typeof rawDate === "number") {
+    createdAt = new Date(rawDate).toISOString();
+  } else if (typeof rawDate === "string") {
+    createdAt = rawDate;
+  }
+
   return {
     id: record.record_id,
     title: f["AI标题"] || "",
@@ -109,7 +138,7 @@ function toBookmark(record: { record_id: string; fields: Record<string, any> }) 
     url,
     tags,
     summary: f["AI摘要"] || "",
-    created_at: f["保存时间"] || "",
+    created_at: createdAt,
     source: f["来源"] || "",
   };
 }
