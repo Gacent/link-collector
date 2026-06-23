@@ -1,4 +1,4 @@
-import { Bookmark, BookmarkListResponse, Tag } from "./types";
+import { Bookmark, BookmarkListResponse } from "./types";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "/api";
 
@@ -27,7 +27,6 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  // Auth
   login(password: string) {
     return request<{ token: string }>("/login", {
       method: "POST",
@@ -35,52 +34,48 @@ export const api = {
     });
   },
 
-  listBookmarks(params?: { cursor?: string; limit?: number; type?: string; tagId?: string }) {
+  // Bookmarks - list, search, filter by tag all through /bookmarks
+  listBookmarks(params?: { cursor?: string; limit?: number; tag?: string; q?: string }) {
     const sp = new URLSearchParams();
     if (params?.cursor) sp.set("cursor", params.cursor);
     if (params?.limit) sp.set("limit", String(params.limit));
-    if (params?.type) sp.set("type", params.type);
-    if (params?.tagId) sp.set("tagId", params.tagId);
-    const qs = sp.toString();
-    return request<BookmarkListResponse>(`/bookmarks${qs ? `?${qs}` : ""}`);
+    if (params?.tag) sp.set("tag", params.tag);
+    if (params?.q) sp.set("q", params.q);
+    return request<BookmarkListResponse>(`/bookmarks${sp.toString() ? `?${sp}` : ""}`);
   },
 
-  getBookmark(id: string) { return request<Bookmark>(`/bookmarks/${id}`); },
-
+  // Create bookmark - new payload shape
   createBookmark(data: {
-    type: "link" | "note"; url?: string; title: string; description?: string;
-    cover_image?: string; source?: string; content?: string; ai_summary?: string;
-    notes?: string; tagIds?: string[];
-  }) { return request<Bookmark>("/bookmarks", { method: "POST", body: JSON.stringify(data) }); },
-
-  updateBookmark(id: string, data: { title?: string; description?: string; notes?: string; is_read?: number; tagIds?: string[] }) {
-    return request<Bookmark>(`/bookmarks/${id}`, { method: "PUT", body: JSON.stringify(data) });
+    url?: string;
+    title: string;
+    original_title?: string;
+    summary?: string;
+    tags?: string[];
+    source?: string;
+  }) {
+    return request<Bookmark>("/bookmarks", { method: "POST", body: JSON.stringify(data) });
   },
 
-  deleteBookmark(id: string) { return request<{ success: boolean }>(`/bookmarks/${id}`, { method: "DELETE" }); },
-
-  listTags() { return request<(Tag & { count: number })[]>("/tags"); },
-
-  createTag(name: string, color?: string) {
-    return request<Tag>("/tags", { method: "POST", body: JSON.stringify({ name, color }) });
+  // Delete bookmark
+  deleteBookmark(id: string) {
+    return request<{ success: boolean }>(`/bookmarks/${id}`, { method: "DELETE" });
   },
 
-  search(params: { q?: string; tag?: string; source?: string }) {
-    const sp = new URLSearchParams();
-    if (params.q) sp.set("q", params.q);
-    if (params.tag) sp.set("tag", params.tag);
-    if (params.source) sp.set("source", params.source);
-    return request<{ bookmarks: Bookmark[] }>(`/search?${sp.toString()}`);
+  // Tags - now just lists tag names from Feishu multi-select options
+  listTags() {
+    return request<{ name: string }[]>("/bookmarks/tags");
   },
 
+  // Fetch link metadata (unchanged)
   fetchMeta(url: string) {
     return request<{ title: string; description: string; cover_image: string; source: string; content: string }>(
       "/fetch-meta", { method: "POST", body: JSON.stringify({ url }) }
     );
   },
 
+  // AI extract - now returns title field too
   aiExtract(data: { type: "link" | "note"; content: string; title?: string }) {
-    return request<{ summary?: string; title?: string; tags: string[]; _fallback?: boolean }>(
+    return request<{ title?: string; summary?: string; tags: string[]; type?: string; _fallback?: boolean }>(
       "/ai-extract", { method: "POST", body: JSON.stringify(data) }
     );
   },

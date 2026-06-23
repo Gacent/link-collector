@@ -1,25 +1,12 @@
 export interface Bookmark {
   id: string;
-  type: "link" | "note";
+  title: string;           // AI标题 - from Feishu
+  original_title?: string;  // 原文标题 - from Feishu
   url?: string;
-  title: string;
-  description?: string;
-  cover_image?: string;
-  source?: string;
-  content?: string;
-  ai_summary?: string;
-  notes?: string;
-  is_read: number;
-  tags: Tag[];
-  created_at: string;
-  updated_at: string;
-}
-
-export interface Tag {
-  id: string;
-  name: string;
-  color: string;
-  count?: number;
+  tags: string[];          // tag names as strings (no longer Tag objects)
+  summary?: string;        // AI摘要
+  created_at: string;      // 保存时间
+  source?: string;         // 来源
 }
 
 export interface BookmarkListResponse {
