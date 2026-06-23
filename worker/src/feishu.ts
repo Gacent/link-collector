@@ -6,12 +6,13 @@
  */
 
 /* ------------------------------------------------------------------ */
-/*  Token cache (module-level)                                        */
+/*  Token cache (module-level, keyed by appId)                        */
 /* ------------------------------------------------------------------ */
 
 interface TokenCache {
   value: string;
   expiresAt: number; // epoch ms
+  appId: string;
 }
 
 let tokenCache: TokenCache | null = null;
@@ -58,8 +59,8 @@ export async function getFeishuToken(
 ): Promise<string> {
   const now = Date.now();
 
-  // Use cached token if it's still valid (with 60 s safety buffer)
-  if (tokenCache && now < tokenCache.expiresAt - 60_000) {
+  // Use cached token if same appId and still valid (with 60 s safety buffer)
+  if (tokenCache && tokenCache.appId === appId && now < tokenCache.expiresAt - 60_000) {
     return tokenCache.value;
   }
 
@@ -86,7 +87,7 @@ export async function getFeishuToken(
 
   // expire is in seconds, convert to absolute ms
   const expiresAt = Date.now() + data.expire * 1000;
-  tokenCache = { value: data.tenant_access_token, expiresAt };
+  tokenCache = { value: data.tenant_access_token, expiresAt, appId };
 
   return data.tenant_access_token;
 }
@@ -260,19 +261,22 @@ export async function searchFeishuRecords(
   const allItems: { record_id: string; fields: Record<string, any> }[] = [];
   let pageToken: string | undefined;
   let hasMore = true;
+  let pageCount = 0;
+  const MAX_PAGES = 5; // Safety: cap at 5 pages (2500 records with default 500/page)
 
-  // Fetch all pages
-  while (hasMore) {
+  // Fetch pages (with safety limit)
+  while (hasMore && pageCount < MAX_PAGES) {
     const result = await listFeishuRecords(
       token,
       appToken,
       tableId,
-      options.pageSize ?? 500,
+      Math.min(options.pageSize ?? 500, 500),
       pageToken,
     );
     allItems.push(...result.items);
     hasMore = result.has_more;
     pageToken = result.page_token ?? undefined;
+    pageCount++;
   }
 
   // Client-side filtering

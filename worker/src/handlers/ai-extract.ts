@@ -4,7 +4,18 @@ import { callSenseNova, LINK_EXTRACT_PROMPT, NOTE_EXTRACT_PROMPT } from "../sens
 
 export const aiExtractRouter = new Hono<{ Bindings: Env }>();
 
-// POST /api/ai-extract
+/** Safe JSON parse: strips markdown fences + blocks prototype pollution */
+function safeJsonParse(text: string): Record<string, unknown> {
+  // Strip markdown code fences if present
+  const cleaned = text.replace(/```(?:json)?\s*/gi, "").replace(/```\s*$/g, "").trim();
+  return JSON.parse(cleaned, (key, value) => {
+    // Block prototype pollution keys
+    if (key === "__proto__" || key === "constructor" || key === "prototype") return undefined;
+    return value;
+  });
+}
+
+/** POST /api/ai-extract */
 aiExtractRouter.post("/", async (c) => {
   const body = await c.req.json<{
     type: "link" | "note";
@@ -27,18 +38,21 @@ aiExtractRouter.post("/", async (c) => {
     if (body.type === "link") {
       const input = `标题：${body.title || ""}\n内容：${body.content}`;
       const text = await callSenseNova(apiKey, LINK_EXTRACT_PROMPT, input);
-      // Strip markdown code fences if present
-      const cleaned = text.replace(/```(?:json)?\s*/gi, "").replace(/```\s*$/g, "").trim();
-      const parsed = JSON.parse(cleaned);
+      const parsed = safeJsonParse(text) as Record<string, unknown>;
       result = {
-        title: parsed.title || "",
-        summary: parsed.summary || "",
-        tags: Array.isArray(parsed.tags) ? parsed.tags : [],
-        type: parsed.type || "article",
+        title: typeof parsed.title === "string" ? parsed.title : "",
+        summary: typeof parsed.summary === "string" ? parsed.summary : "",
+        tags: Array.isArray(parsed.tags) ? parsed.tags.filter((t): t is string => typeof t === "string") : [],
+        type: typeof parsed.type === "string" ? parsed.type : "article",
       };
     } else {
       const text = await callSenseNova(apiKey, NOTE_EXTRACT_PROMPT, body.content);
-      result = JSON.parse(text);
+      const parsed = safeJsonParse(text) as Record<string, unknown>;
+      result = {
+        title: typeof parsed.title === "string" ? parsed.title : body.content.slice(0, 30),
+        summary: typeof parsed.summary === "string" ? parsed.summary : "",
+        tags: Array.isArray(parsed.tags) ? parsed.tags.filter((t): t is string => typeof t === "string") : [],
+      };
     }
 
     return c.json(result);

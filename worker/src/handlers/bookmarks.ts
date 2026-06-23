@@ -11,6 +11,10 @@ import {
 
 export const bookmarksRouter = new Hono<{ Bindings: Env }>();
 
+/** Tags cache: avoids full table scan on every /tags request */
+let tagsCache: { data: { name: string; count: number }[]; expiresAt: number } | null = null;
+const TAGS_CACHE_TTL = 60_000; // 60 seconds
+
 async function withFeishu<T>(c: any, fn: (token: string) => Promise<T>): Promise<Response> {
   try {
     const token = await getFeishuToken(c.env.FEISHU_APP_ID, c.env.FEISHU_APP_SECRET);
@@ -60,18 +64,53 @@ bookmarksRouter.post("/", async (c) => {
     source?: string;
   }>();
 
-  if (!body.title) return c.json({ error: "title is required" }, 400);
+  // --- Input validation ---
+  if (!body.title || typeof body.title !== "string") {
+    return c.json({ error: "title is required" }, 400);
+  }
+  const title = body.title.trim().slice(0, 200);
+  if (!title) return c.json({ error: "title cannot be blank" }, 400);
+
+  const summary = (typeof body.summary === "string" ? body.summary : "").slice(0, 5000);
+  const originalTitle = (typeof body.original_title === "string" ? body.original_title : "").slice(0, 500);
+  const source = (typeof body.source === "string" ? body.source : "").slice(0, 200);
+
+  // Tags: max 20, each max 50 chars, strings only
+  const tags = Array.isArray(body.tags)
+    ? body.tags
+        .filter((t): t is string => typeof t === "string")
+        .map((t) => t.trim())
+        .filter((t) => t.length > 0)
+        .slice(0, 20)
+        .map((t) => t.slice(0, 50))
+    : [];
+
+  // URL: validate format if provided
+  let validUrl = "";
+  if (body.url && typeof body.url === "string") {
+    try {
+      const u = new URL(body.url);
+      if (u.protocol === "http:" || u.protocol === "https:") {
+        validUrl = u.toString();
+      }
+    } catch {
+      // invalid URL — ignore
+    }
+  }
 
   return withFeishu(c, async (token) => {
     const fields: Record<string, any> = {
-      "AI标题": body.title,
-      "原文标题": body.original_title || "",
-      "URL": body.url ? { text: body.title, link: body.url } : "",
-      "标签": body.tags || [],
-      "AI摘要": body.summary || "",
+      "AI标题": title,
+      "原文标题": originalTitle,
+      "标签": tags,
+      "AI摘要": summary,
       "保存时间": Date.now(),
-      "来源": body.source || "",
+      "来源": source,
     };
+    // URL field: only include when URL exists, use Feishu hyperlink format
+    if (validUrl) {
+      fields["URL"] = { text: title, link: validUrl };
+    }
     const record = await createFeishuRecord(token, c.env.FEISHU_BASE_APP_TOKEN, c.env.FEISHU_BASE_TABLE_ID, fields);
     return c.json(toBookmark(record), 201);
   });
@@ -88,12 +127,19 @@ bookmarksRouter.delete("/:id", async (c) => {
 
 // List all tags (multi-select options from Feishu)
 bookmarksRouter.get("/tags", async (c) => {
+  // Serve from cache if valid
+  if (tagsCache && Date.now() < tagsCache.expiresAt) {
+    return c.json(tagsCache.data);
+  }
+
   return withFeishu(c, async (token) => {
     // Collect all unique tag names with counts from actual records
     const tagCounts = new Map<string, number>();
     let pageToken: string | undefined;
     let hasMore = true;
-    while (hasMore) {
+    let pageCount = 0;
+    const MAX_PAGES = 5;
+    while (hasMore && pageCount < MAX_PAGES) {
       const result = await listFeishuRecords(token, c.env.FEISHU_BASE_APP_TOKEN, c.env.FEISHU_BASE_TABLE_ID, 500, pageToken);
       for (const item of result.items) {
         const tagField = item.fields["标签"];
@@ -106,10 +152,13 @@ bookmarksRouter.get("/tags", async (c) => {
       }
       hasMore = result.has_more;
       pageToken = result.page_token ?? undefined;
+      pageCount++;
     }
-    return Array.from(tagCounts.entries())
+    const data = Array.from(tagCounts.entries())
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count);
+    tagsCache = { data, expiresAt: Date.now() + TAGS_CACHE_TTL };
+    return data;
   });
 });
 
