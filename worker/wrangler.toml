@@ -2,8 +2,10 @@ name = "link-collector-worker"
 main = "src/index.ts"
 compatibility_date = "2025-01-01"
 
-[[d1_databases]]
-binding = "DB"
-database_name = "link-collector-db"
-database_id = "link-collector-db"
-preview_database_id = "link-collector-db"
+[vars]
+APP_PASSWORD = "123456"
+SENSENOVA_API_KEY = ""
+FEISHU_APP_ID = ""
+FEISHU_APP_SECRET = ""
+FEISHU_BASE_APP_TOKEN = ""
+FEISHU_BASE_TABLE_ID = ""
