@@ -63,7 +63,7 @@ export const api = {
 
   // Tags - now just lists tag names from Feishu multi-select options
   listTags() {
-    return request<{ name: string }[]>("/bookmarks/tags");
+    return request<{ name: string; count: number }[]>("/bookmarks/tags");
   },
 
   // Fetch link metadata (unchanged)

@@ -89,8 +89,8 @@ bookmarksRouter.delete("/:id", async (c) => {
 // List all tags (multi-select options from Feishu)
 bookmarksRouter.get("/tags", async (c) => {
   return withFeishu(c, async (token) => {
-    // Collect all unique tag names from actual records
-    const allTags = new Set<string>();
+    // Collect all unique tag names with counts from actual records
+    const tagCounts = new Map<string, number>();
     let pageToken: string | undefined;
     let hasMore = true;
     while (hasMore) {
@@ -100,14 +100,16 @@ bookmarksRouter.get("/tags", async (c) => {
         if (Array.isArray(tagField)) {
           for (const t of tagField) {
             const name = typeof t === "string" ? t : t.name ?? String(t);
-            if (name) allTags.add(name);
+            if (name) tagCounts.set(name, (tagCounts.get(name) || 0) + 1);
           }
         }
       }
       hasMore = result.has_more;
       pageToken = result.page_token ?? undefined;
     }
-    return Array.from(allTags).map((name) => ({ name }));
+    return Array.from(tagCounts.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
   });
 });
 
