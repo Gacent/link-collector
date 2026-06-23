@@ -42,14 +42,19 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <input
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          type="password"
-          placeholder="密码"
-          autoFocus
-          className="w-full bg-[var(--color-canvas)] dark:bg-[var(--color-surface-dark-soft)] border border-[var(--color-hairline)] dark:border-[var(--color-surface-dark-elevated)] rounded-[var(--radius-md)] px-4 py-2.5 text-sm text-[var(--color-ink)] dark:text-[var(--color-on-dark)] focus-ring mb-4"
-        />
+        <div className="space-y-1 mb-5">
+          <label className="block text-sm font-medium text-[var(--color-ink)] dark:text-[var(--color-on-dark)]">
+            访问密码
+          </label>
+          <input
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            type="password"
+            placeholder="请输入密码"
+            autoFocus
+            className="w-full bg-[var(--color-canvas)] dark:bg-[var(--color-surface-dark-soft)] border border-[var(--color-hairline)] dark:border-[var(--color-surface-dark-elevated)] rounded-[var(--radius-md)] px-4 py-3 text-base text-[var(--color-ink)] dark:text-[var(--color-on-dark)] placeholder:text-[var(--color-muted-soft)] focus-ring outline-none"
+          />
+        </div>
 
         {error && (
           <p className="text-[var(--color-error)] text-sm text-center mb-4">

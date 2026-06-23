@@ -60,7 +60,7 @@ export default function SettingsPage() {
           显示
         </h3>
         <div className="bg-[var(--color-surface-card)] dark:bg-[var(--color-surface-dark-elevated)] rounded-[var(--radius-lg)]">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-hairline)] dark:border-[var(--color-surface-dark-soft)]">
+          <div className="flex items-center justify-between px-4 py-3">
             <div>
               <p className="text-sm text-[var(--color-ink)] dark:text-[var(--color-on-dark)]">
                 深色模式
@@ -135,7 +135,6 @@ export default function SettingsPage() {
       {/* Footer */}
       <section className="text-center text-xs text-[var(--color-muted)] dark:text-[var(--color-on-dark-soft)]">
         <p>个人收藏工具 v1.0</p>
-        <p>数据存储在 Cloudflare D1 云端</p>
       </section>
     </div>
   );

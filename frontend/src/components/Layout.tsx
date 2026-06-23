@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 interface LayoutProps {
@@ -54,12 +54,6 @@ export default function Layout({ children }: LayoutProps) {
             >
               {isDark ? '☀️' : '🌙'}
             </button>
-            <Link to="/login" className="inline-flex items-center gap-1.5 px-3.5 py-1.5 
-              bg-[var(--color-primary)] text-[var(--color-on-primary)] 
-              rounded-[var(--radius-md)] text-[13px] font-sans font-medium 
-              hover:bg-[var(--color-primary-active)] transition-colors btn-press">
-              + 收藏
-            </Link>
           </div>
         </div>
       </header>
@@ -71,7 +65,7 @@ export default function Layout({ children }: LayoutProps) {
         </div>
       </main>
 
-      {/* Bottom Navigation */}
+          {/* Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 
         bg-[var(--color-canvas)] dark:bg-[var(--color-surface-dark)] 
         border-t border-[var(--color-hairline)] 
@@ -97,17 +91,6 @@ export default function Layout({ children }: LayoutProps) {
               </button>
             );
           })}
-          {/* Dark mode toggle in nav */}
-          <button 
-            onClick={toggleDarkMode}
-            className={`flex flex-col items-center justify-center h-full px-4 text-xs font-medium 
-              transition-colors duration-200 text-[var(--color-muted)] 
-              dark:text-[var(--color-on-dark-soft)] hover:text-[var(--color-body)]`}>
-            <span className="w-5 h-5 mb-0.5 flex items-center justify-center text-[16px]">
-              {isDark ? '☀️' : '🌙'}
-            </span>
-            <span className="text-[11px] uppercase tracking-[1px]">主题</span>
-          </button>
         </div>
       </nav>
     </div>

@@ -40,7 +40,8 @@ export default function SearchBar() {
   function goToBookmark(id: string) {
     setShowResults(false);
     setQuery("");
-    navigate(`/bookmark/${id}`);
+    const b = results.find((r) => r.id === id);
+    navigate(`/bookmark/${id}`, { state: { bookmark: b } });
   }
 
   return (
