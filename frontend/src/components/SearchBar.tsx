@@ -24,7 +24,7 @@ export default function SearchBar() {
     const timer = setTimeout(async () => {
       setSearching(true);
       try {
-        const res = await api.search({ q: query });
+        const res = await api.listBookmarks({ q: query });
         setResults(res.bookmarks.slice(0, 10));
         setShowResults(true);
       } catch {}
@@ -51,7 +51,7 @@ export default function SearchBar() {
             <button key={b.id} onClick={() => goToBookmark(b.id)}
               className="w-full text-left p-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-0">
               <div className="text-sm font-medium text-gray-900 dark:text-white line-clamp-1">{b.title}</div>
-              <div className="text-xs text-gray-400 line-clamp-1">{b.description || b.ai_summary}</div>
+              <div className="text-xs text-gray-400 line-clamp-1">{b.summary}</div>
             </button>
           ))}
         </div>

@@ -2,15 +2,8 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
 
-interface TagWithCount {
-  id: string;
-  name: string;
-  color: string;
-  count: number;
-}
-
 export default function TagsPage() {
-  const [tags, setTags] = useState<TagWithCount[]>([]);
+  const [tags, setTags] = useState<{ name: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => { api.listTags().then((data) => { setTags(data); setLoading(false); }); }, []);
@@ -25,10 +18,9 @@ export default function TagsPage() {
       ) : (
         <div className="grid grid-cols-2 gap-3">
           {tags.map((tag) => (
-            <Link key={tag.id} to={`/tags/${encodeURIComponent(tag.name)}`}
+            <Link key={tag.name} to={`/tags/${encodeURIComponent(tag.name)}`}
               className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:shadow-md transition-shadow">
               <div className="text-lg font-bold text-gray-900 dark:text-white">{tag.name}</div>
-              <div className="text-sm text-gray-400">{tag.count} 条</div>
             </Link>
           ))}
         </div>

@@ -1,18 +1,17 @@
 import { useState, useRef, useEffect } from "react";
 import { readClipboard, isUrl } from "../clipboard";
 import { api } from "../api";
-import TagBadge from "./TagBadge";
 
 interface PreviewData {
   type: "link" | "note";
   url?: string;
   title: string;
-  description: string;
-  cover_image: string;
+  original_title?: string;
+  cover_image?: string;
   source: string;
-  content: string;
+  content?: string;
   tags: string[];
-  ai_summary: string;
+  summary?: string;
 }
 
 const tagOptions = ["技术", "AI", "商业", "产品", "设计", "生活", "开源", "教程", "新闻", "观点", "工具", "资源", "阅读", "其它"];
@@ -21,7 +20,6 @@ export default function BookmarkForm({ onSaved }: { onSaved: () => void }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState<PreviewData | null>(null);
-  const [notes, setNotes] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [customTag, setCustomTag] = useState("");
@@ -38,16 +36,23 @@ export default function BookmarkForm({ onSaved }: { onSaved: () => void }) {
       const meta = await api.fetchMeta(text);
       let tags: string[] = [];
       let summary = "";
+      let title = meta.title || text;
 
       if (meta.content) {
         try {
           const ai = await api.aiExtract({ type: "link", content: meta.content, title: meta.title });
+          if (ai.title) title = ai.title;
           tags = ai.tags || [];
           summary = ai.summary || "";
         } catch {}
       }
 
-      setPreview({ type: "link", url: text, title: meta.title || text, description: meta.description, cover_image: meta.cover_image, source: meta.source, content: meta.content, tags, ai_summary: summary });
+      setPreview({
+        type: "link", url: text, title,
+        original_title: meta.title !== title ? meta.title : undefined,
+        cover_image: meta.cover_image, source: meta.source,
+        tags, summary,
+      });
       setSelectedTags(tags);
     } else {
       let title = text.slice(0, 30);
@@ -59,7 +64,7 @@ export default function BookmarkForm({ onSaved }: { onSaved: () => void }) {
         tags = ai.tags || [];
       } catch {}
 
-      setPreview({ type: "note", title, description: text.slice(0, 200), cover_image: "", source: "", content: text, tags, ai_summary: "" });
+      setPreview({ type: "note", title, source: "", content: text, tags, summary: "" });
       setSelectedTags(tags);
     }
 
@@ -68,26 +73,17 @@ export default function BookmarkForm({ onSaved }: { onSaved: () => void }) {
 
   async function handleSave() {
     if (!preview) return;
-    const tagIds: string[] = [];
-    for (const tagName of selectedTags) {
-      try {
-        const tag = await api.createTag(tagName);
-        tagIds.push(tag.id);
-      } catch {
-        const tags = await api.listTags();
-        const existing = tags.find((t) => t.name === tagName);
-        if (existing) tagIds.push(existing.id);
-      }
-    }
 
     await api.createBookmark({
-      type: preview.type, url: preview.url, title: preview.title, description: preview.description,
-      cover_image: preview.cover_image, source: preview.source,
-      content: preview.type === "note" ? preview.content : undefined,
-      ai_summary: preview.ai_summary || undefined, notes, tagIds,
+      url: preview.url,
+      title: preview.title,
+      original_title: preview.original_title || "",
+      summary: preview.summary,
+      tags: selectedTags,
+      source: preview.source,
     });
 
-    setInput(""); setPreview(null); setNotes(""); setSelectedTags([]); setShowForm(false);
+    setInput(""); setPreview(null); setSelectedTags([]); setShowForm(false);
     onSaved();
   }
 
@@ -129,11 +125,15 @@ export default function BookmarkForm({ onSaved }: { onSaved: () => void }) {
           )}
           <div className="space-y-1">
             <h3 className="font-semibold text-gray-900 dark:text-white">{preview.title}</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{preview.ai_summary || preview.description}</p>
+            {preview.original_title && preview.original_title !== preview.title && (
+              <p className="text-xs text-gray-400">{preview.original_title}</p>
+            )}
+            <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{preview.summary}</p>
             {preview.source && <p className="text-xs text-gray-400">{preview.source}</p>}
+            {preview.type === "note" && preview.content && (
+              <p className="text-xs text-gray-400 line-clamp-3 whitespace-pre-wrap">{preview.content}</p>
+            )}
           </div>
-          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="添加备注...（可选）"
-            className="w-full p-2 border border-gray-200 dark:border-gray-600 rounded-lg resize-none text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-50 dark:bg-gray-900 dark:text-white" rows={2} />
           <div>
             <div className="flex flex-wrap gap-1.5 mb-2">
               {tagOptions.map((tag) => (

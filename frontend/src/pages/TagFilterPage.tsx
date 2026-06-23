@@ -11,12 +11,8 @@ export default function TagFilterPage() {
 
   useEffect(() => {
     if (!tagName) return;
-    api.listTags().then(async (tags) => {
-      const tag = tags.find((t) => t.name === tagName);
-      if (tag) {
-        const res = await api.listBookmarks({ tagId: tag.id, limit: 50 });
-        setBookmarks(res.bookmarks);
-      }
+    api.listBookmarks({ tag: tagName, limit: 50 }).then((res) => {
+      setBookmarks(res.bookmarks);
       setLoading(false);
     });
   }, [tagName]);
