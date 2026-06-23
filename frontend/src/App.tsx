@@ -6,6 +6,7 @@ import TagsPage from "./pages/TagsPage";
 import TagFilterPage from "./pages/TagFilterPage";
 import SettingsPage from "./pages/SettingsPage";
 import LoginPage from "./pages/LoginPage";
+import SearchPage from "./pages/SearchPage";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem("auth_token");
@@ -24,6 +25,7 @@ export default function App() {
             <Layout>
               <Routes>
                 <Route path="/" element={<HomePage />} />
+                <Route path="/search" element={<SearchPage />} />
                 <Route path="/bookmark/:id" element={<DetailPage />} />
                 <Route path="/tags" element={<TagsPage />} />
                 <Route path="/tags/:tagName" element={<TagFilterPage />} />

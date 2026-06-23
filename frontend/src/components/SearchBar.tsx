@@ -3,21 +3,39 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { Bookmark } from "../types";
 
-export default function SearchBar() {
+interface SearchBarProps {
+  inputRef?: React.RefObject<HTMLInputElement | null>;
+  autoFocus?: boolean;
+  onSearchDone?: () => void;
+}
+
+export default function SearchBar({ inputRef, autoFocus, onSearchDone }: SearchBarProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Bookmark[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [searching, setSearching] = useState(false);
   const navigate = useNavigate();
-  const ref = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const localInputRef = useRef<HTMLInputElement>(null);
+  const activeInputRef = inputRef || localInputRef;
+
+  // Handle autoFocus
+  useEffect(() => {
+    if (autoFocus && activeInputRef.current) {
+      activeInputRef.current.focus();
+    }
+  }, [autoFocus, activeInputRef]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setShowResults(false);
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setShowResults(false);
+        onSearchDone?.();
+      }
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
+  }, [onSearchDone]);
 
   useEffect(() => {
     if (!query.trim()) { 
@@ -42,12 +60,12 @@ export default function SearchBar() {
     setQuery("");
     const b = results.find((r) => r.id === id);
     navigate(`/bookmark/${id}`, { state: { bookmark: b } });
+    onSearchDone?.();
   }
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={containerRef} className="relative">
       <div className="relative">
-        {/* Search icon */}
         <div className="absolute left-3 top-1/2 -translate-y-1/2 
           text-[var(--color-muted-soft)] dark:text-[var(--color-on-dark-soft)] 
           pointer-events-none">
@@ -57,6 +75,7 @@ export default function SearchBar() {
           </svg>
         </div>
         <input
+          ref={activeInputRef}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => query.trim() && results.length > 0 && setShowResults(true)}
@@ -64,7 +83,7 @@ export default function SearchBar() {
           className="w-full py-2.5 px-4 pl-10 pr-10 
             bg-[var(--color-surface-card)] dark:bg-[var(--color-surface-dark-elevated)] 
             rounded-[var(--radius-lg)] text-[var(--color-ink)] dark:text-[var(--color-on-dark)]
-            text-[14px] font-sans placeholder:text-[var(--color-muted-soft)]
+            placeholder:text-[var(--color-muted-soft)]
             focus-ring transition-all duration-200"
         />
         {searching && (

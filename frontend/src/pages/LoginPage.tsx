@@ -30,7 +30,7 @@ export default function LoginPage() {
     <div className="flex items-center justify-center min-h-screen bg-[var(--color-canvas)] dark:bg-[var(--color-surface-dark)] px-4">
       <form
         onSubmit={handleLogin}
-        className="w-full max-w-sm bg-[var(--color-surface-card)] dark:bg-[var(--color-surface-dark-elevated)] rounded-[var(--radius-xl)] p-8"
+        className="w-full max-w-[420px] bg-[var(--color-surface-card)] dark:bg-[var(--color-surface-dark-elevated)] rounded-[var(--radius-xl)] p-8"
       >
         <div className="text-center space-y-2 mb-6">
           <div className="text-4xl">🔖</div>
