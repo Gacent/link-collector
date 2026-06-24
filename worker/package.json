@@ -1,12 +1,12 @@
 {
-  "name": "link-collector-worker",
+  "name": "stashtab-worker",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "db:migrate": "wrangler d1 execute link-collector-db --file=schema.sql",
-    "db:migrate:remote": "wrangler d1 execute link-collector-db --file=schema.sql --remote"
+    "db:migrate": "wrangler d1 execute stashtab-db --file=schema.sql",
+    "db:migrate:remote": "wrangler d1 execute stashtab-db --file=schema.sql --remote"
   },
   "dependencies": {
     "@cloudflare/puppeteer": "^1.1.0",

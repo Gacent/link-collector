@@ -1,6 +1,6 @@
 <div align="center">
 
-# LinkCollector · 个人收藏夹
+# 拾签 StashTab
 
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178c6)](https://www.typescriptlang.org/)
@@ -11,9 +11,9 @@
 [![Tailwind](https://img.shields.io/badge/Tailwind-4-06b6d4)](https://tailwindcss.com/)
 [![PWA](https://img.shields.io/badge/PWA-Supported-5a0fc7)](https://web.dev/progressive-web-apps/)
 
-> 粘贴链接 → AI自动提取标题/标签/摘要 → 保存到飞书多维表格
+> 拾起链接，拾起灵感
 
-一键收藏网页链接和随手笔记，AI 自动生成去标题党的标题、分类标签和内容摘要，存入飞书多维表格，支持全文搜索和标签筛选。
+AI 驱动的个人收藏工具。粘贴链接或文字，自动提取标题、标签、摘要，存入飞书多维表格，支持全文搜索和标签筛选。
 
 [English](#english) · 简体中文
 
@@ -146,7 +146,7 @@ npm run deploy
 # 构建前端并部署到 Pages
 cd frontend
 VITE_API_BASE=https://你的-worker域名.workers.dev/api npm run build
-npx wrangler pages deploy dist --project-name=link-collector
+npx wrangler pages deploy dist --project-name=stashtab
 ```
 
 ## 项目结构
@@ -236,9 +236,9 @@ npx wrangler pages deploy dist --project-name=link-collector
 
 ## English
 
-**LinkCollector** — A personal bookmark aggregator powered by AI.
+**StashTab** — AI-powered personal bookmark aggregator.
 
-Paste a link → AI auto-extracts title, tags, and summary → Save to Feishu Base.
+Paste a link or note → AI auto-extracts title, tags, and summary → Save to Feishu Base.
 
 ### Features
 
@@ -260,8 +260,8 @@ Paste a link → AI auto-extracts title, tags, and summary → Save to Feishu Ba
 
 ```bash
 # Clone
-git clone https://github.com/Gacent/link-collector.git
-cd link-collector
+git clone https://github.com/Gacent/stashtab.git
+cd stashtab
 
 # Configure
 cp worker/wrangler.toml.example worker/wrangler.toml
@@ -272,4 +272,4 @@ cd worker && npm install && npm run dev
 cd frontend && npm install && npm run dev
 ```
 
-See [README (Chinese)](#linkcollector--个人收藏夹) for full documentation.
+See [README (Chinese)](#拾签-stashtab) for full documentation.

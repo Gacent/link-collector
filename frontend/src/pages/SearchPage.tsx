@@ -47,7 +47,7 @@ export default function SearchPage() {
           <input ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="搜索收藏..."
+            placeholder="搜索拾签..."
             className="w-full py-3 px-4 pl-10 bg-[var(--color-surface-card)] dark:bg-[var(--color-surface-dark-elevated)] rounded-[var(--radius-lg)] text-[var(--color-ink)] dark:text-[var(--color-on-dark)] placeholder:text-[var(--color-muted-soft)] focus:outline-none" />
         </div>
         <button onClick={() => navigate(-1)}

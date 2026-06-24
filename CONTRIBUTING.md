@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for your interest in contributing to LinkCollector!
+Thanks for your interest in contributing to StashTab!
 
 ## Getting Started
 
@@ -16,8 +16,8 @@ Thanks for your interest in contributing to LinkCollector!
 
 ```bash
 # Clone
-git clone https://github.com/your-username/link-collector.git
-cd link-collector
+git clone https://github.com/your-username/stashtab.git
+cd stashtab
 
 # Install dependencies
 cd worker && npm install

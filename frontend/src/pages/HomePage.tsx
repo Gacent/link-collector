@@ -143,7 +143,7 @@ export default function HomePage() {
         ) : bookmarks.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-5xl mb-4">📭</p>
-            <p className="text-[var(--color-muted)] dark:text-[var(--color-on-dark-soft)] text-sm">还没有收藏，粘贴一个链接开始吧</p>
+            <p className="text-[var(--color-muted)] dark:text-[var(--color-on-dark-soft)] text-sm">还没有拾签，粘贴一个链接开始吧</p>
           </div>
         ) : (
           <div className="space-y-6">

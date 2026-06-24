@@ -35,7 +35,7 @@ export default function LoginPage() {
         <div className="text-center space-y-2 mb-6">
           <div className="text-4xl">🔖</div>
           <h1 className="font-[var(--font-display)] text-2xl text-[var(--color-ink)] dark:text-[var(--color-on-dark)]">
-            收藏夹
+            拾签
           </h1>
           <p className="text-sm text-[var(--color-muted)] dark:text-[var(--color-on-dark-soft)]">
             请输入访问密码

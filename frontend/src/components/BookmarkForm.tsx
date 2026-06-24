@@ -121,7 +121,7 @@ export default function BookmarkForm({ onSaved }: { onSaved: () => void }) {
           hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] 
           transition-colors duration-200 btn-press"
       >
-        <span className="text-[var(--color-primary)] font-semibold mr-1">+</span> 粘贴链接或文字来收藏
+        <span className="text-[var(--color-primary)] font-semibold mr-1">+</span> 粘贴链接或文字来拾签
       </button>
     );
   }

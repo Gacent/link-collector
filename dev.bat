@@ -1,10 +1,10 @@
 @echo off
 chcp 65001 >nul
-title LinkCollector Dev Server
+title 拾签 StashTab Dev Server
 cd /d "%~dp0"
 
 echo ================================
-echo   个人收藏工具 - 开发环境
+echo   拾签 - 开发环境
 echo ================================
 echo.
 

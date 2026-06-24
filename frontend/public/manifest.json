@@ -1,7 +1,7 @@
 {
-  "name": "收藏夹",
-  "short_name": "收藏夹",
-  "description": "个人资源收藏工具 - 聚合管理你的链接和笔记",
+  "name": "拾签",
+  "short_name": "拾签",
+  "description": "拾起链接，拾起灵感",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f9fafb",

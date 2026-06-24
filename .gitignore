@@ -8,4 +8,5 @@ wrangler.toml
 
 .playwright-mcp/
 /docs/**
+!/docs/screenshots/
 .omo/**

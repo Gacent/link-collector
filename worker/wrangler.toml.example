@@ -1,4 +1,4 @@
-name = "link-collector-worker"
+name = "stashtab-worker"
 main = "src/index.ts"
 compatibility_date = "2026-06-23"
 compatibility_flags = ["nodejs_compat"]

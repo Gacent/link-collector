@@ -79,7 +79,7 @@ export default function SearchBar({ inputRef, autoFocus, onSearchDone }: SearchB
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => query.trim() && results.length > 0 && setShowResults(true)}
-          placeholder="搜索收藏..."
+          placeholder="搜索拾签..."
           className="w-full py-2.5 px-4 pl-10 pr-10 
             bg-[var(--color-surface-card)] dark:bg-[var(--color-surface-dark-elevated)] 
             rounded-[var(--radius-lg)] text-[var(--color-ink)] dark:text-[var(--color-on-dark)]

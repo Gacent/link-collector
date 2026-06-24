@@ -40,7 +40,7 @@ export default function Layout({ children }: LayoutProps) {
           <div className="flex items-center gap-3">
             <h1 className="font-display font-semibold text-[var(--color-ink)] 
               dark:text-[var(--color-on-dark)] text-[20px] tracking-tight">
-              收藏集
+              拾签
             </h1>
           </div>
           <div className="flex items-center gap-2">

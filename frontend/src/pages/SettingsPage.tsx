@@ -40,7 +40,7 @@ export default function SettingsPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `link-collector-export-${new Date()
+    a.download = `stashtab-export-${new Date()
       .toISOString()
       .slice(0, 10)}.json`;
     a.click();
@@ -134,7 +134,7 @@ export default function SettingsPage() {
 
       {/* Footer */}
       <section className="text-center text-xs text-[var(--color-muted)] dark:text-[var(--color-on-dark-soft)]">
-        <p>个人收藏工具 v1.0</p>
+        <p>拾签 StashTab v1.0</p>
       </section>
     </div>
   );
