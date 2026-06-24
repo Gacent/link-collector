@@ -23,7 +23,7 @@ jobs:
 
       # 部署 Pages
       - name: Build Frontend
-        run: cd frontend && npm install && npm run build
+        run: cd frontend && npm install && npm run build -- --mode prod
 
       - name: Deploy Pages
         run: cd frontend && npx wrangler pages deploy dist --project-name=stashtab
