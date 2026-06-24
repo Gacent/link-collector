@@ -21,8 +21,6 @@
 
 ## 截图
 
-> 📸 截图待补充 — 欢迎 PR 添加
-
 | 首页 | 搜索 | 标签 | 详情 |
 |------|------|------|------|
 | ![首页](docs/screenshots/home.png) | ![搜索](docs/screenshots/search.png) | ![标签](docs/screenshots/tags.png) | ![详情](docs/screenshots/detail.png) |
