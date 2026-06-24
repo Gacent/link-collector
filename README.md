@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/icons/icon-brush-tag.png" alt="拾签 StashTab" width="120" height="120">
+
 # 拾签 StashTab
 
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
