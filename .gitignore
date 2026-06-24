@@ -10,3 +10,7 @@ wrangler.toml
 /docs/**
 !/docs/screenshots/
 .omo/**
+
+.dev.vars*
+!.dev.vars.example
+!.env.example
