@@ -22,6 +22,13 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       # 部署 Pages
+      - name: Create Pages project (if not exists)
+        continue-on-error: true
+        run: npx wrangler pages project create stashtab --production-branch master
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
       - name: Build Frontend
         run: cd frontend && npm install && npm run build -- --mode prod
 
